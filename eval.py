@@ -260,13 +260,13 @@ def imgs2tensors(path):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    # os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
-    # fid_value = calculate_fid_given_paths(args.path,
-    #                                       args.batch_size,
-    #                                       args.gpu != '',
-    #                                       args.dims)
-    # print('FID: ', fid_value)
+    fid_value = calculate_fid_given_paths(args.path,
+                                          args.batch_size,
+                                          args.gpu != '',
+                                          args.dims)
+    print('FID: ', fid_value)
 
     path = os.path.join(os.getcwd(), "results", args.path[0], "fake")
 
