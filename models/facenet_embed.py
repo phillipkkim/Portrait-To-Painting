@@ -2,13 +2,31 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 from PIL import Image
 import os  # Helps us find Phillip and Danny
 import numpy as np
+import torchvision.transforms as transforms
 
 
 def get_embeddings(img):
     """img is a np array of the image"""
+    # resnet = InceptionResnetV1(pretrained='vggface2').eval()
+    # mtcnn = MTCNN()
+    # img_cropped = mtcnn(img)
+    # print(img_cropped)
+    # img_embedding = resnet(img_cropped.unsqueeze(0))
+    # return img_embedding
+
+    """img is tensor of shape (1, 3, 256, 256)"""
+    img = img.squeeze(0)
     resnet = InceptionResnetV1(pretrained='vggface2').eval()
-    img_cropped = mtcnn(img1)
-    img_embedding = resnet(img_cropped.unsqueeze(0))
+
+    # temp = transforms.ToPILImage()(img)
+    # temp = img.permute(0, 2, 3, 1).detach().numpy()
+    # mtcnn = MTCNN()
+    # img_cropped = mtcnn(temp)
+    # if (img_cropped != None):
+    #     img_embedding = resnet(img_cropped.unsqueeze(0))
+    # else:
+    img_embedding = resnet(img.unsqueeze(0))
+
     return img_embedding
 
 
@@ -18,7 +36,7 @@ if __name__ == '__main__':
     #script_dir = os.path.dirname(__file__)
     # Absolute directory the script is in
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    abs_file_path_Phillip = script_dir + "/Phillip.png"
+    abs_file_path_Phillip = script_dir + "/Phillip.jpg"
     abs_file_path_Danny = script_dir + "/Danny.png"
 
     print(script_dir)
