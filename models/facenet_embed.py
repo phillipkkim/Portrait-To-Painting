@@ -17,7 +17,6 @@ def get_embeddings(img):
     """img is tensor of shape (1, 3, 256, 256)"""
     img = img.squeeze(0)
     resnet = InceptionResnetV1(pretrained='vggface2').eval()
-
     # temp = transforms.ToPILImage()(img)
     # temp = img.permute(0, 2, 3, 1).detach().numpy()
     # mtcnn = MTCNN()
@@ -26,7 +25,6 @@ def get_embeddings(img):
     #     img_embedding = resnet(img_cropped.unsqueeze(0))
     # else:
     img_embedding = resnet(img.unsqueeze(0))
-
     return img_embedding
 
 

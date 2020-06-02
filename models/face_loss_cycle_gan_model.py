@@ -209,12 +209,10 @@ class facelosscycleganmodel(BaseModel):
         # self.loss_cycle_B = self.criterionCycle(
         #     self.rec_B, self.real_B) * lambda_B
 
-        print("cycle loss", self.loss_cycle_A, self.loss_cycle_B)
         # combined loss and calculate gradients
         self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + \
             self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B
 
-        print("loss_G_A", self.loss_G_A, self.loss_G_B)
         self.loss_G.backward()
 
     def optimize_parameters(self):
