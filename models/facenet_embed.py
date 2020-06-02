@@ -17,6 +17,7 @@ def get_embeddings(img):
     """img is tensor of shape (1, 3, 256, 256)"""
     img = img.squeeze(0)
     resnet = InceptionResnetV1(pretrained='vggface2').eval()
+    resnet.cuda()
     # temp = transforms.ToPILImage()(img)
     # temp = img.permute(0, 2, 3, 1).detach().numpy()
     # mtcnn = MTCNN()
