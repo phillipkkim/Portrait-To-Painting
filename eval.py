@@ -231,7 +231,7 @@ def calculate_fid_given_paths(paths, batch_size, cuda, dims):
         model.cuda()
 
     path1 = os.path.join(os.getcwd(), "results", paths[0], "fake")
-    path2 = os.path.join(os.getcwd(), "results", paths[0], "target_style")
+    path2 = os.path.join(os.getcwd(), "datasets", "target_style")
 
     if not os.path.exists(path1):
         raise RuntimeError('Invalid path: %s' % path1)
@@ -260,13 +260,13 @@ def imgs2tensors(path):
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    # os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
-    # fid_value = calculate_fid_given_paths(args.path,
-    #                                       args.batch_size,
-    #                                       args.gpu != '',
-    #                                       args.dims)
-    # print('FID: ', fid_value)
+    fid_value = calculate_fid_given_paths(args.path,
+                                          args.batch_size,
+                                          args.gpu != '',
+                                          args.dims)
+    print('FID: ', fid_value)
 
     path = os.path.join(os.getcwd(), "results", args.path[0], "fake")
 
