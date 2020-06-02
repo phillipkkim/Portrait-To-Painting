@@ -3,6 +3,7 @@ import itertools
 from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
+from . import facenet_embed
 
 
 class CycleGANModel(BaseModel):
@@ -98,7 +99,12 @@ class CycleGANModel(BaseModel):
             # define loss functions
             # define GAN loss.
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
-            self.criterionCycle = torch.nn.L1Loss()
+
+            # self.criterionCycle = torch.nn.L1Loss()
+
+            """CHANGING TO L2 LOSS"""
+            self.criterionCycle = torch.nn.MSELoss()
+
             self.criterionIdt = torch.nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(
@@ -127,6 +133,9 @@ class CycleGANModel(BaseModel):
         self.rec_A = self.netG_B(self.fake_B)   # G_B(G_A(A))
         self.fake_A = self.netG_B(self.real_B)  # G_B(B)
         self.rec_B = self.netG_A(self.fake_A)   # G_A(G_B(B))
+
+        # print(get_embeddings(self.rec_A))
+        print(self.rec_A)
 
     def backward_D_basic(self, netD, real, fake):
         """Calculate GAN loss for the discriminator
@@ -185,6 +194,8 @@ class CycleGANModel(BaseModel):
         self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A), True)
 
         # self.rec_A and self.rec_B are type <class 'torch.Tensor'>
+        # print(self.rec_A.detach().numpy().shape)
+        # (1, 3, 256, 256)
 
         # Forward cycle loss || G_B(G_A(A)) - A||
         self.loss_cycle_A = self.criterionCycle(

@@ -231,7 +231,7 @@ def calculate_fid_given_paths(paths, batch_size, cuda, dims):
         model.cuda()
 
     path1 = os.path.join(os.getcwd(), "results", paths[0], "fake")
-    path2 = os.path.join(os.getcwd(), "results", paths[0], "target_style")
+    path2 = os.path.join(os.getcwd(), "datasets", "target_style")
 
     if not os.path.exists(path1):
         raise RuntimeError('Invalid path: %s' % path1)
