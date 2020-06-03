@@ -6,6 +6,7 @@ from . import networks
 from .facenet_embed import get_embeddings
 from PIL import Image
 import torchvision.transforms as transforms
+from facenet_pytorch import MTCNN, InceptionResnetV1
 
 
 class facelosscycleganmodel(BaseModel):
@@ -60,6 +61,8 @@ class facelosscycleganmodel(BaseModel):
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         BaseModel.__init__(self, opt)
+        self.resnet = InceptionResnetV1(pretrained='vggface2').eval()
+        self.resnet.cuda()
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['D_A', 'G_A', 'cycle_A',
                            'idt_A', 'D_B', 'G_B', 'cycle_B', 'idt_B']
@@ -200,12 +203,12 @@ class facelosscycleganmodel(BaseModel):
 
         # Forward cycle loss || G_B(G_A(A)) - A||
         self.loss_cycle_A = self.criterionCycle(
-            get_embeddings(self.rec_A), get_embeddings(self.real_A)) * lambda_A
+            self.resnet(self.rec_A), self.resnet(self.real_A)) * lambda_A
         # self.loss_cycle_A = self.criterionCycle(
         #     self.rec_A, self.real_A) * lambda_A
         # Backward cycle loss || G_A(G_B(B)) - B||
         self.loss_cycle_B = self.criterionCycle(
-            get_embeddings(self.rec_B), get_embeddings(self.real_B)) * lambda_B
+            self.resnet(self.rec_B), self.resnet(self.real_B)) * lambda_B
         # self.loss_cycle_B = self.criterionCycle(
         #     self.rec_B, self.real_B) * lambda_B
 
