@@ -3,7 +3,7 @@ import itertools
 from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
-from . import pytorch_ssimd
+from . import pytorch_ssim
 
 
 class ssimlosscycleganmodel(BaseModel):
