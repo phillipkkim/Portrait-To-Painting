@@ -191,10 +191,10 @@ class ssimlosscycleganmodel(BaseModel):
 
         # Forward cycle loss || G_B(G_A(A)) - A||
         self.loss_cycle_A = (self.criterionCycle(
-            self.rec_A, self.real_A) - self.ssim_loss(self.rec_A, self.real_A)) * lambda_A
+            self.rec_A, self.real_A)) * lambda_A - self.ssim_loss(self.rec_A, self.real_A)
         # Backward cycle loss || G_A(G_B(B)) - B||
         self.loss_cycle_B = (self.criterionCycle(
-            self.rec_B, self.real_B) - self.ssim_loss(self.rec_B, self.real_B)) * lambda_B
+            self.rec_B, self.real_B)) * lambda_B - self.ssim_loss(self.rec_B, self.real_B)
 
         # combined loss and calculate gradients
         self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + \
