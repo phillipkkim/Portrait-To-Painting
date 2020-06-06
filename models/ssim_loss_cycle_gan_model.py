@@ -3,13 +3,10 @@ import itertools
 from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
-from .facenet_embed import get_embeddings
-from PIL import Image
-import torchvision.transforms as transforms
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from . import pytorch_ssimd
 
 
-class facelosscycleganmodel(BaseModel):
+class ssimlosscycleganmodel(BaseModel):
     """
     This class implements the CycleGAN model, for learning image-to-image translation without paired data.
 
@@ -43,11 +40,9 @@ class facelosscycleganmodel(BaseModel):
         parser.set_defaults(
             no_dropout=True)  # default CycleGAN did not use dropout
         if is_train:
-            # changed default to 100
-            parser.add_argument('--lambda_A', type=float, default=100.0,
+            parser.add_argument('--lambda_A', type=float, default=10.0,
                                 help='weight for cycle loss (A -> B -> A)')
-            # changed default to 100
-            parser.add_argument('--lambda_B', type=float, default=100.0,
+            parser.add_argument('--lambda_B', type=float, default=10.0,
                                 help='weight for cycle loss (B -> A -> B)')
             parser.add_argument('--lambda_identity', type=float, default=0.5,
                                 help='use identity mapping. Setting lambda_identity other than 0 has an effect of scaling the weight of the identity mapping loss. For example, if the weight of the identity loss should be 10 times smaller than the weight of the reconstruction loss, please set lambda_identity = 0.1')
@@ -61,8 +56,6 @@ class facelosscycleganmodel(BaseModel):
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         BaseModel.__init__(self, opt)
-        self.resnet = InceptionResnetV1(pretrained='vggface2').eval()
-        self.resnet.cuda()
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['D_A', 'G_A', 'cycle_A',
                            'idt_A', 'D_B', 'G_B', 'cycle_B', 'idt_B']
@@ -106,12 +99,7 @@ class facelosscycleganmodel(BaseModel):
             # define loss functions
             # define GAN loss.
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
-
             self.criterionCycle = torch.nn.L1Loss()
-
-            """CHANGING TO L2 LOSS"""
-            # self.criterionCycle = torch.nn.MSELoss()
-
             self.criterionIdt = torch.nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(
@@ -120,6 +108,8 @@ class facelosscycleganmodel(BaseModel):
             ), self.netD_B.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
+
+        self.ssim_loss = pytorch_ssim.SSIM()
 
     def set_input(self, input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
@@ -198,25 +188,17 @@ class facelosscycleganmodel(BaseModel):
         self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A), True)
 
         # self.rec_A and self.rec_B are type <class 'torch.Tensor'>
-        # print(self.rec_A.detach().numpy().shape)
-        # (1, 3, 256, 256)
 
         # Forward cycle loss || G_B(G_A(A)) - A||
-        self.loss_cycle_A = self.criterionCycle(
-            self.resnet(self.rec_A), self.resnet(self.real_A)) * lambda_A
-        # self.loss_cycle_A = self.criterionCycle(
-        #     self.rec_A, self.real_A) * lambda_A
+        self.loss_cycle_A = (self.criterionCycle(
+            self.rec_A, self.real_A) - self.ssim_loss(self.rec_A, self.real_A)) * lambda_A
         # Backward cycle loss || G_A(G_B(B)) - B||
-        self.loss_cycle_B = self.criterionCycle(
-            self.resnet(self.rec_B), self.resnet(self.real_B)) * lambda_B
-
-        # self.loss_cycle_B = self.criterionCycle(
-        #     self.rec_B, self.real_B) * lambda_B
+        self.loss_cycle_B = (self.criterionCycle(
+            self.rec_B, self.real_B) - self.ssim_loss(self.rec_B, self.real_B)) * lambda_B
 
         # combined loss and calculate gradients
         self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + \
             self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B
-
         self.loss_G.backward()
 
     def optimize_parameters(self):
